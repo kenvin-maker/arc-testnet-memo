@@ -60,3 +60,10 @@ cirBTC: 0xf0C4a4CE82A5746AbAAd9425360Ab04fbBA432BF
 ## Notes
 
 Arc Testnet uses testnet USDC as gas. Remix users should connect through Browser Extension / MetaMask before deploying.
+## 2026-06-16 Activity
+
+- Read Arc House content about v0.7.2 hardfork, transaction memos, and batch transactions
+- Called ArcMemo setMemo before hardfork activation
+  - Tx: https://testnet.arcscan.app/tx/0x482bf4e11f9ae76d16be3ba1f739fd9e6384a1583b87b05cfa5b469b5eb0d3a6
+- Sent 0.17 testnet USDC to an auxiliary wallet
+  - Tx: https://testnet.arcscan.app/tx/0xd2a05815088a914736a54af9445c56adf5d6f37438a4ba222a3a88714d084b9e
