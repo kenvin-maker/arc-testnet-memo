@@ -67,3 +67,18 @@ Arc Testnet uses testnet USDC as gas. Remix users should connect through Browser
   - Tx: https://testnet.arcscan.app/tx/0x482bf4e11f9ae76d16be3ba1f739fd9e6384a1583b87b05cfa5b469b5eb0d3a6
 - Sent 0.17 testnet USDC to an auxiliary wallet
   - Tx: https://testnet.arcscan.app/tx/0xd2a05815088a914736a54af9445c56adf5d6f37438a4ba222a3a88714d084b9e
+## 2026-06-19 Post-Hardfork Verification
+
+After the Arc Testnet v0.7.2 activation, I tested the existing ArcMemo contract and stablecoin transfer flow again.
+
+- Called ArcMemo setMemo after v0.7.2 activation
+  - Tx: https://testnet.arcscan.app/tx/0xb196e9deebd08cff4815654167c4bd7ac654b8c1cd3641c4020de2ec9efc7e38
+- Sent small post-hardfork USDC transfer
+  - Tx: https://testnet.arcscan.app/tx/0xf9908ab73805e49d00b2dbb345064c13291ab714d02302e05d9dd8e83f21e97f
+- Sent additional small post-hardfork USDC transfer
+  - Tx: https://testnet.arcscan.app/tx/0x0550da403e5c4e492bd6f4be0183411c1e15a958ac5f77915fee175ffee8b5fe
+
+Notes:
+- Existing contract interaction worked after the hardfork.
+- USDC gas and token transfer visibility worked on ArcScan.
+- Next area to explore: transaction memo and batch transaction developer flows.
