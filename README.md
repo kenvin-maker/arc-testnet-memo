@@ -82,3 +82,12 @@ Notes:
 - Existing contract interaction worked after the hardfork.
 - USDC gas and token transfer visibility worked on ArcScan.
 - Next area to explore: transaction memo and batch transaction developer flows.
+## Next Exploration
+
+After verifying normal contract calls and USDC transfers after v0.7.2, the next area I plan to explore is Arc's transaction memo and batch transaction flow.
+
+Focus areas:
+- USDC transfers with structured payment references
+- Invoice IDs and payout references
+- Batch payment workflows
+- ArcScan visibility for memo-related transactions
