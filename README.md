@@ -91,3 +91,22 @@ Focus areas:
 - Invoice IDs and payout references
 - Batch payment workflows
 - ArcScan visibility for memo-related transactions
+## 2026-06-23 Transaction Memo Test
+
+I tested Arc's official Memo contract after the v0.7.2 activation by wrapping a small USDC transfer with structured memo metadata.
+
+- Memo contract:
+  - 0x5294E9927C3306DcBaDb03fe70b92e01cCede505
+- Target token:
+  - USDC: 0x3600000000000000000000000000000000000000
+- Flow:
+  - Called `memo(target, data, memoId, memoData)` through Remix and MetaMask
+  - Sent 0.07 testnet USDC to an auxiliary wallet
+  - Attached structured memo data for invoice/payment reference testing
+- Tx:
+  - https://testnet.arcscan.app/tx/0xb4dec799023d6c2414dec833a7840a0d7571d3ec19c708342c49351782ee4d7d
+
+Notes:
+- This test used Arc's post-v0.7.2 transaction memo flow.
+- The transaction was confirmed and visible in MetaMask activity.
+- This is a stronger developer test than a normal USDC transfer because it exercises memo-enabled payment metadata.
