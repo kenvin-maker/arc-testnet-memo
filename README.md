@@ -110,3 +110,21 @@ Notes:
 - This test used Arc's post-v0.7.2 transaction memo flow.
 - The transaction was confirmed and visible in MetaMask activity.
 - This is a stronger developer test than a normal USDC transfer because it exercises memo-enabled payment metadata.
+## 2026-06-27 Batch USDC Transfer Test
+
+I tested Arc's official Multicall3From contract after v0.7.2 by batching two USDC transfer calls into one transaction.
+
+- Multicall3From contract:
+  - 0x522fAf9A91c41c443c66765030741e4AaCe147D0
+- Target token:
+  - USDC: 0x3600000000000000000000000000000000000000
+- Flow:
+  - Called `aggregate(Call[] calls)` through Remix and MetaMask
+  - Sent 0.05 testnet USDC to an auxiliary wallet
+  - Included a second 0.02 testnet USDC transfer to my own wallet as part of the same batch
+- Tx:
+  - https://testnet.arcscan.app/tx/0x6a194420c4ef58eb022cef45f2d5f3a0e0b5e7b742ca7c400aebdc695dea08b2
+
+Notes:
+- This test used Arc's post-v0.7.2 batch transaction flow.
+- The transaction exercises sender-preserving batch calls through the official Multicall3From contract.
