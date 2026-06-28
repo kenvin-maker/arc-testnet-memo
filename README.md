@@ -128,3 +128,29 @@ I tested Arc's official Multicall3From contract after v0.7.2 by batching two USD
 Notes:
 - This test used Arc's post-v0.7.2 batch transaction flow.
 - The transaction exercises sender-preserving batch calls through the official Multicall3From contract.
+## Lepton Hackathon Direction
+
+I am using this repository as the starting point for a small Lepton Agents Hackathon prototype under RFB 05: Nanopayment Infrastructure & Tooling.
+
+### Project Idea: AgentTreasury Lite
+
+AgentTreasury Lite is a lightweight Arc testnet payment tracker for agent wallets. The goal is to document and demonstrate how an AI agent or agent-like workflow can use USDC payments, transaction memos, and batch transfers for small settlement flows.
+
+### Why this fits Arc
+
+Arc is designed for stablecoin-native settlement with fast finality and predictable USDC gas. That makes it suitable for agentic micropayments, invoice references, payout batching, and payment reconciliation.
+
+### Current Prototype Evidence
+
+- Tested Arc Testnet with MetaMask and Remix
+- Deployed and interacted with a simple ArcMemo contract
+- Tested Arc's official Memo contract for structured payment metadata
+- Tested Arc's official Multicall3From contract for batch USDC transfers
+- Joined the Lepton Agents Hackathon and selected RFB 05 as the project direction
+
+### Next Steps
+
+- Package the existing transaction history into a cleaner payment log
+- Add a simple agent wallet treasury table
+- Document memo-enabled payment examples
+- Explore a small dashboard or static demo for agent payment activity
