@@ -154,3 +154,23 @@ Arc is designed for stablecoin-native settlement with fast finality and predicta
 - Add a simple agent wallet treasury table
 - Document memo-enabled payment examples
 - Explore a small dashboard or static demo for agent payment activity
+## AgentTreasury Lite Payment Log
+
+AgentTreasury Lite is a lightweight Arc Testnet payment-tracking prototype for agent wallets. It records memo-enabled payments, batch settlement flows, and wallet activity that can later become a simple dashboard for agent treasury management.
+
+| Date | Flow | Contract / Wallet | Amount | Tx |
+| --- | --- | --- | --- | --- |
+| 2026-06-23 | Memo-enabled USDC payment | Memo contract: 0x5294E9927C3306DcBaDb03fe70b92e01cCede505 | 0.07 USDC | https://testnet.arcscan.app/tx/0xb4dec799023d6c2414dec833a7840a0d7571d3ec19c708342c49351782ee4d7d |
+| 2026-06-27 | Batch USDC transfer | Multicall3From: 0x522fAf9A91c41c443c66765030741e4AaCe147D0 | 0.07 USDC total | https://testnet.arcscan.app/tx/0x6a194420c4ef58eb022cef45f2d5f3a0e0b5e7b742ca7c400aebdc695dea08b2 |
+
+### Prototype Direction
+
+This payment log is the first step toward an AgentTreasury Lite prototype for RFB 05: Nanopayment Infrastructure & Tooling.
+
+The goal is to help builders inspect:
+
+- agent wallet payment history
+- USDC settlement activity
+- memo-based payment references
+- batch transfer flows
+- future dashboard-ready treasury records
