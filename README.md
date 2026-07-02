@@ -174,3 +174,37 @@ The goal is to help builders inspect:
 - memo-based payment references
 - batch transfer flows
 - future dashboard-ready treasury records
+## Submission Draft
+
+Project name: AgentTreasury Lite
+
+Track / RFB: RFB 05 - Nanopayment Infrastructure & Tooling
+
+AgentTreasury Lite is a lightweight Arc Testnet payment log and treasury prototype for agent wallets. It organizes real Arc testnet activity into a simple reviewer-friendly record, including memo-enabled USDC payments, batch transfers, wallet roles, and transaction evidence.
+
+### Problem
+
+Agent and AI payment flows can become hard to inspect once wallets, memos, batch transfers, and settlement records are spread across explorers and Discord updates.
+
+### Solution
+
+AgentTreasury Lite turns these payment actions into a clean treasury log that can later become a dashboard for agent-wallet spending, earning, and reconciliation.
+
+### Arc / Circle Features Used
+
+- Arc Testnet
+- USDC gas and USDC transfers
+- Official Memo contract
+- Official Multicall3From contract
+- Remix + MetaMask
+- ArcScan transaction evidence
+
+### Demo Plan
+
+The demo will show:
+
+1. Existing Arc testnet transactions
+2. Memo-enabled USDC payment record
+3. Batch USDC transfer record
+4. AgentTreasury Lite payment log in GitHub
+5. Next step toward a simple dashboard
