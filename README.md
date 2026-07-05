@@ -1,7 +1,11 @@
 # Arc Testnet Memo
 
 Simple Arc Network Testnet smart contract deployment and interaction log.
+## Demo
 
+Video demo: https://www.youtube.com/watch?v=3jFuRj20a8g
+
+Submitted for Lepton Agents Hackathon, RFB 05 - Nanopayment Infrastructure & Tooling.
 ## Overview
 
 This repository records my Arc Network Testnet testing using MetaMask, Circle Faucet, Remix, USDC gas, ArcScan, and a simple smart contract.
