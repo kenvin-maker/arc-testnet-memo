@@ -1,0 +1,14 @@
+{
+  "name": "agent-treasury-lite",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Dry-run treasury policy agent for Arc testnet payment workflows",
+  "type": "module",
+  "scripts": {
+    "start": "node src/agentTreasuryLite.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,6 +1,93 @@
 # Arc Testnet Memo
 
 Simple Arc Network Testnet smart contract deployment and interaction log.
+
+## AgentTreasury Lite Runnable MVP
+
+AgentTreasury Lite is now a runnable dry-run treasury policy agent for the Encode Programmable Money Hackathon **Agentic Economy** track. It evaluates an agent payment request before any wallet action and produces an auditable `APPROVED` or `REJECTED` decision.
+
+The MVP checks:
+
+- recipient allowlists
+- maximum single-payment limits
+- minimum remaining wallet balance
+- invoice references
+- deterministic memo metadata for later Arc settlement
+
+It does **not** connect to a wallet, read a private key, contact an RPC endpoint, sign a transaction, or broadcast a payment.
+
+### Requirements
+
+- Node.js 20 or newer
+
+No package installation is required because the MVP uses only Node.js built-in modules.
+
+### Run the example
+
+```bash
+npm start -- examples/payment-request.json config/policy.json
+```
+
+Example request:
+
+```json
+{
+  "recipient": "0x1111111111111111111111111111111111111111",
+  "amountUSDC": 0.05,
+  "invoiceId": "INV-2026-001",
+  "walletBalanceUSDC": 1.0
+}
+```
+
+Example policy:
+
+```json
+{
+  "maxPaymentUSDC": 0.1,
+  "minimumRemainingBalanceUSDC": 0.5,
+  "allowlistedRecipients": [
+    "0x1111111111111111111111111111111111111111"
+  ]
+}
+```
+
+The example returns `APPROVED`, the projected remaining balance, a deterministic bytes32-style memo ID, and a memo-data preview. Every result includes `dryRun: true` and explicitly confirms that no transaction was broadcast.
+
+Example output:
+
+```json
+{
+  "decision": "APPROVED",
+  "reasons": [
+    "Payment satisfies all treasury policy rules."
+  ],
+  "remainingBalanceUSDC": 0.95,
+  "suggestedMemoId": "0xb2458d7cb216405ec38dddbaf5359f5418e58da1bbc9aec3fe98105b26cda6fd",
+  "dryRun": true,
+  "execution": "Eligible for separate manual wallet review; no transaction was broadcast."
+}
+```
+
+### Run the tests
+
+```bash
+npm test
+```
+
+The test suite covers approval, non-allowlisted recipients, payment limits, minimum reserves, combined failures, invalid input, case-insensitive address matching, and deterministic memo IDs.
+
+### How this maps to Arc
+
+The dry-run agent is the decision layer that was missing from the original evidence log:
+
+1. A payment request supplies the recipient, amount, invoice ID, and wallet balance.
+2. AgentTreasury Lite applies treasury policy and explains its decision.
+3. An approved decision produces a proposed memo ID and memo-data preview.
+4. A future, separate user-confirmed step can execute the payment through Arc's Memo contract or group approved transfers through Multicall3From.
+5. The resulting ArcScan transaction can be linked back to the agent decision for reconciliation.
+
+The repository already contains real Arc testnet evidence for both the official Memo contract and Multicall3From. The MVP intentionally keeps wallet signing manual and outside the agent.
+
 ## Demo
 
 Video demo: https://www.youtube.com/watch?v=3jFuRj20a8g

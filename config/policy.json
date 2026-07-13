@@ -1,0 +1,7 @@
+{
+  "maxPaymentUSDC": 0.1,
+  "minimumRemainingBalanceUSDC": 0.5,
+  "allowlistedRecipients": [
+    "0x1111111111111111111111111111111111111111"
+  ]
+}
