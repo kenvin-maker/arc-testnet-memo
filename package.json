@@ -2,13 +2,26 @@
   "name": "agent-treasury-lite",
   "version": "0.1.0",
   "private": true,
-  "description": "Dry-run treasury policy agent for Arc testnet payment workflows",
+  "description": "Policy-gated Arc Testnet USDC payment demo using Circle App Kit",
   "type": "module",
   "scripts": {
     "start": "node src/agentTreasuryLite.js",
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
     "test": "node --test"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@circle-fin/adapter-viem-v2": "^1.14.0",
+    "@circle-fin/app-kit": "^1.10.0",
+    "buffer": "^6.0.3",
+    "viem": "^2.55.2"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vite": "^8.1.5"
   }
 }

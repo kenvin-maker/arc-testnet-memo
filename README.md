@@ -2,9 +2,100 @@
 
 Simple Arc Network Testnet smart contract deployment and interaction log.
 
+## AgentTreasury Lite App Kit Demo
+
+AgentTreasury Lite now includes a browser-based policy agent that evaluates an
+Arc Testnet USDC payment before Circle App Kit can request a MetaMask signature.
+
+The demo implements this flow:
+
+```text
+payment request -> policy decision -> human authorization -> App Kit Send -> ArcScan evidence
+```
+
+### What it demonstrates
+
+- a browser-safe treasury policy engine shared with the CLI
+- live MetaMask account, network, and balance checks
+- recipient allowlist enforcement
+- maximum payment and minimum reserve controls
+- Circle App Kit `estimateSend()` and `send()`
+- an explicit human signature boundary in MetaMask
+- transaction evidence and a copyable audit record
+- deterministic invoice memo IDs for offchain reconciliation
+
+The browser application never requests, reads, stores, or exports a private key.
+It cannot execute a rejected request, and it prevents duplicate sends while a
+transaction is in flight.
+
+### Requirements
+
+- Node.js 22 or newer
+- Google Chrome with MetaMask
+- Arc Testnet configured with chain ID `5042002`
+- testnet USDC only
+
+### Install and run
+
+```bash
+npm install
+npm run dev
+```
+
+Open `http://127.0.0.1:4173`, then:
+
+1. Connect MetaMask with the expected Arc Testnet wallet.
+2. Review the prefilled recipient, amount, and invoice ID.
+3. Confirm that the agent decision is `APPROVED`.
+4. Click **Execute with MetaMask**.
+5. Review and sign the transaction in MetaMask.
+6. Use the returned ArcScan link and audit JSON to verify settlement.
+
+Build the production bundle with:
+
+```bash
+npm run build
+```
+
+### Demo policy
+
+- Allowed recipient:
+  `0x9240e82aE80D70875BA854F480ba412b410cd54a`
+- Default payment: `0.01 USDC`
+- Maximum payment: `0.05 USDC`
+- Minimum remaining balance: `0.05 USDC`
+- Invoice ID: required
+
+### Verified App Kit Send
+
+On 2026-07-18, the browser demo approved and executed a real Arc Testnet App
+Kit Send from the project wallet to the allowlisted auxiliary wallet.
+
+- Sender:
+  `0x8b615E587C9636db67Dd93f4982116ce053EabDD`
+- Recipient:
+  `0x9240e82aE80D70875BA854F480ba412b410cd54a`
+- Amount: `0.01 USDC`
+- Invoice ID: `ARC-APPKIT-2026-0718-001`
+- Offchain reconciliation memo ID:
+  `0xc7b65ad290592fa036ab61e0c7ceb072dc8b6bfe94e81fd24e22f810d7cd0c03`
+- Transaction:
+  https://testnet.arcscan.app/tx/0x6a46e44a1346772966d1690c6e03a4baf35ff699a7003a58d99c3fe9cd41d572
+
+RPC verification confirms a successful receipt and an ERC-20 `transfer` call
+to Arc Testnet USDC with `10000` base units, equal to `0.01 USDC`.
+
+The memo ID above is linked to the transaction in the demo's audit record. It
+is not embedded in this App Kit Send transaction through Arc's Memo contract.
+The repository's earlier Memo contract transaction remains separate evidence
+of the onchain memo workflow.
+
 ## AgentTreasury Lite Runnable MVP
 
-AgentTreasury Lite is now a runnable dry-run treasury policy agent for the Encode Programmable Money Hackathon **Agentic Economy** track. It evaluates an agent payment request before any wallet action and produces an auditable `APPROVED` or `REJECTED` decision.
+The original CLI remains available as a dry-run treasury policy agent for the
+Encode Programmable Money Hackathon **Agentic Economy** track. It evaluates an
+agent payment request before any wallet action and produces an auditable
+`APPROVED` or `REJECTED` decision.
 
 The MVP checks:
 
@@ -18,9 +109,10 @@ It does **not** connect to a wallet, read a private key, contact an RPC endpoint
 
 ### Requirements
 
-- Node.js 20 or newer
+- Node.js 22 or newer
 
-No package installation is required because the MVP uses only Node.js built-in modules.
+The CLI itself uses Node.js built-in modules. Run `npm install` when using the
+browser App Kit demo.
 
 ### Run the example
 
@@ -83,7 +175,9 @@ The dry-run agent is the decision layer that was missing from the original evide
 1. A payment request supplies the recipient, amount, invoice ID, and wallet balance.
 2. AgentTreasury Lite applies treasury policy and explains its decision.
 3. An approved decision produces a proposed memo ID and memo-data preview.
-4. A future, separate user-confirmed step can execute the payment through Arc's Memo contract or group approved transfers through Multicall3From.
+4. The browser demo can execute a separately reviewed payment through App Kit
+   Send, while the existing Memo and Multicall3From transactions demonstrate
+   the project's other settlement paths.
 5. The resulting ArcScan transaction can be linked back to the agent decision for reconciliation.
 
 The repository already contains real Arc testnet evidence for both the official Memo contract and Multicall3From. The MVP intentionally keeps wallet signing manual and outside the agent.
