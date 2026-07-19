@@ -489,6 +489,99 @@ input:focus {
   font-size: 0.73rem;
 }
 
+.identity-card {
+  border-color: rgba(90, 124, 255, 0.28);
+}
+
+.identity-meta {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: 0.7fr 0.8fr 2fr;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+}
+
+.identity-meta div {
+  min-width: 0;
+  padding: 17px;
+  border-right: 1px solid var(--line);
+}
+
+.identity-meta div:last-child {
+  border-right: 0;
+}
+
+.identity-meta span,
+.identity-result span {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.identity-meta strong,
+.identity-result strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: "DM Mono", monospace;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.identity-uri {
+  grid-column: 1 / -1;
+  margin: -7px 0 0;
+  overflow-wrap: anywhere;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.identity-uri a {
+  color: var(--cyan);
+}
+
+.identity-evidence {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: 1fr auto;
+  gap: 18px;
+  padding-top: 4px;
+}
+
+.identity-result {
+  padding: 16px;
+  border: 1px solid rgba(84, 224, 210, 0.24);
+  border-radius: 13px;
+  background: rgba(84, 224, 210, 0.05);
+}
+
+.identity-result strong {
+  color: var(--cyan);
+  font-size: 1rem;
+}
+
+.identity-evidence pre {
+  grid-column: 1 / -1;
+  max-height: 340px;
+  overflow: auto;
+  margin: 0;
+  padding: 20px;
+  color: #aee7df;
+  border-radius: 14px;
+  background: #031012;
+  font-family: "DM Mono", monospace;
+  font-size: 0.7rem;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.identity-evidence.hidden {
+  display: none;
+}
+
 .hidden {
   display: none;
 }
@@ -527,12 +620,14 @@ footer {
   }
 
   .status-grid,
-  .execution-meta {
+  .execution-meta,
+  .identity-meta {
     grid-template-columns: 1fr 1fr;
   }
 
   .status-grid div,
-  .execution-meta div {
+  .execution-meta div,
+  .identity-meta div {
     border-bottom: 1px solid var(--line);
   }
 
@@ -546,6 +641,14 @@ footer {
 
   .evidence-card pre,
   .text-button {
+    grid-column: 1;
+  }
+
+  .identity-evidence {
+    grid-template-columns: 1fr;
+  }
+
+  .identity-evidence pre {
     grid-column: 1;
   }
 }

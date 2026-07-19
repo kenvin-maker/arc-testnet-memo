@@ -4,9 +4,12 @@ import { ArcTestnet } from "@circle-fin/app-kit/chains";
 import { createViemAdapterFromProvider } from "@circle-fin/adapter-viem-v2";
 import {
   createPublicClient,
+  createWalletClient,
+  custom,
   defineChain,
   formatUnits,
   http,
+  type Abi,
   type EIP1193Provider,
 } from "viem";
 import { BROWSER_DEMO_POLICY, evaluatePolicy } from "../policy.js";
@@ -17,14 +20,27 @@ import {
   createExecutionGuard,
   normalizeSendResult,
 } from "./paymentFlow.js";
+import {
+  AGENT_METADATA_URI,
+  ARC_CHAIN_HEX,
+  ARC_CHAIN_ID,
+  ARC_EXPLORER,
+  ARC_RPC,
+  AUXILIARY_WALLET,
+  EXPECTED_ACCOUNT,
+  IDENTITY_REGISTRY,
+  USDC_ADDRESS,
+} from "./arcConfig.js";
+import {
+  buildIdentityEvidence,
+  buildRegistrationRequest,
+  classifyIdentityError,
+  createIdentityExecutionGuard,
+  identityRegistryAbi,
+  parseRegisteredAgentId,
+  validateAgentMetadataUri,
+} from "./agentIdentity.js";
 import "./styles.css";
-
-const EXPECTED_ACCOUNT = "0x8b615e587c9636db67dd93f4982116ce053eabdd";
-const AUXILIARY_WALLET = "0x9240e82aE80D70875BA854F480ba412b410cd54a";
-const ARC_CHAIN_ID = 5_042_002;
-const ARC_CHAIN_HEX = `0x${ARC_CHAIN_ID.toString(16)}`;
-const ARC_RPC = "https://rpc.testnet.arc.network";
-const USDC_ADDRESS = "0x3600000000000000000000000000000000000000";
 
 const arcViemChain = defineChain({
   id: ARC_CHAIN_ID,
@@ -32,7 +48,7 @@ const arcViemChain = defineChain({
   nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
   rpcUrls: { default: { http: [ARC_RPC] } },
   blockExplorers: {
-    default: { name: "ArcScan", url: "https://testnet.arcscan.app" },
+    default: { name: "ArcScan", url: ARC_EXPLORER },
   },
   testnet: true,
 });
@@ -63,10 +79,12 @@ type WalletState = {
 
 const kit = new AppKit();
 const guard = createExecutionGuard();
+const identityGuard = createIdentityExecutionGuard();
 const publicClient = createPublicClient({ chain: arcViemChain, transport: http(ARC_RPC) });
 let walletState: WalletState | null = null;
 let currentDecision: PolicyResult | null = null;
 let currentAuditRecord: Record<string, unknown> | null = null;
+let currentIdentityEvidence: Record<string, unknown> | null = null;
 
 const app = document.querySelector<HTMLDivElement>("#app");
 if (!app) throw new Error("Application root was not found.");
@@ -188,6 +206,41 @@ app.innerHTML = `
       <button id="copy-audit" class="text-button" type="button">Copy audit JSON</button>
     </section>
 
+    <section class="status-card identity-card" aria-labelledby="identity-title">
+      <div>
+        <p class="section-kicker">06 · AGENT IDENTITY</p>
+        <h2 id="identity-title">ERC-8004 onchain identity</h2>
+      </div>
+      <button id="register-identity" class="button execute" type="button" disabled>
+        Register Agent Identity
+      </button>
+      <div class="identity-meta">
+        <div><span>Standard</span><strong>ERC-8004</strong></div>
+        <div><span>Network</span><strong>Arc Testnet</strong></div>
+        <div><span>Identity Registry</span><strong>${IDENTITY_REGISTRY}</strong></div>
+      </div>
+      <p class="identity-uri">
+        Public metadata:
+        <a id="metadata-link" href="${AGENT_METADATA_URI}" target="_blank" rel="noreferrer">
+          ${AGENT_METADATA_URI}
+        </a>
+      </p>
+      <p id="identity-message" class="message neutral">
+        Connect the expected wallet to prepare one human-authorized identity registration.
+      </p>
+      <div id="identity-evidence" class="identity-evidence hidden">
+        <div class="identity-result">
+          <span>Agent ID</span>
+          <strong id="identity-agent-id">—</strong>
+        </div>
+        <a id="identity-explorer-link" class="button outline" target="_blank" rel="noreferrer">
+          View registration on ArcScan
+        </a>
+        <pre id="identity-record"></pre>
+        <button id="copy-identity" class="text-button" type="button">Copy identity JSON</button>
+      </div>
+    </section>
+
     <footer>
       <span>AgentTreasury Lite</span>
       <span>Human-authorized · Policy-controlled · Arc-settled</span>
@@ -209,6 +262,9 @@ const invoiceInput = byId<HTMLInputElement>("invoice");
 const walletMessage = byId<HTMLParagraphElement>("wallet-message");
 const executionMessage = byId<HTMLParagraphElement>("execution-message");
 const evidenceCard = byId<HTMLElement>("evidence-card");
+const registerIdentityButton = byId<HTMLButtonElement>("register-identity");
+const identityMessage = byId<HTMLParagraphElement>("identity-message");
+const identityEvidence = byId<HTMLElement>("identity-evidence");
 
 function setMessage(element: HTMLElement, text: string, tone: "neutral" | "good" | "bad" | "busy") {
   element.textContent = text;
@@ -223,6 +279,36 @@ function setExecutionEnabled(enabled: boolean) {
   executeButton.disabled = !enabled || guard.isInFlight();
 }
 
+function renderIdentityReadiness() {
+  const ready =
+    Boolean(walletState) &&
+    (walletState?.nativeGasUSDC ?? 0) > 0 &&
+    !identityGuard.isInFlight() &&
+    !currentIdentityEvidence;
+  registerIdentityButton.disabled = !ready;
+
+  if (currentIdentityEvidence) return;
+  if (!walletState) {
+    setMessage(
+      identityMessage,
+      "Connect the expected wallet to prepare one human-authorized identity registration.",
+      "neutral",
+    );
+  } else if (walletState.nativeGasUSDC <= 0) {
+    setMessage(
+      identityMessage,
+      "The connected wallet needs Arc Testnet gas balance before registration.",
+      "bad",
+    );
+  } else {
+    setMessage(
+      identityMessage,
+      "Ready. Review the registry and metadata URI, then register once with MetaMask.",
+      "good",
+    );
+  }
+}
+
 function renderDecision() {
   const badge = byId<HTMLSpanElement>("decision-badge");
   const summary = byId<HTMLParagraphElement>("decision-summary");
@@ -235,6 +321,7 @@ function renderDecision() {
     badge.className = "badge waiting";
     summary.textContent = "Connect the expected wallet to evaluate this payment against live balances.";
     setExecutionEnabled(false);
+    renderIdentityReadiness();
     return;
   }
 
@@ -267,12 +354,14 @@ function renderDecision() {
     byId("preview-remaining").textContent =
       `${currentDecision.remainingBalanceUSDC.toFixed(6)} USDC`;
     setExecutionEnabled(approved && walletState.nativeGasUSDC > 0);
+    renderIdentityReadiness();
   } catch (error) {
     currentDecision = null;
     badge.textContent = "INVALID";
     badge.className = "badge rejected";
     summary.textContent = error instanceof Error ? error.message : "The request is invalid.";
     setExecutionEnabled(false);
+    renderIdentityReadiness();
   }
 }
 
@@ -430,8 +519,97 @@ async function executePayment() {
   }
 }
 
+async function registerAgentIdentity() {
+  const provider = window.ethereum;
+  if (!provider || !walletState || !identityGuard.begin()) return;
+
+  currentIdentityEvidence = null;
+  identityEvidence.classList.add("hidden");
+  renderIdentityReadiness();
+
+  try {
+    const metadataUri = validateAgentMetadataUri(AGENT_METADATA_URI);
+    const walletClient = createWalletClient({
+      account: walletState.account,
+      chain: arcViemChain,
+      transport: custom(provider),
+    });
+    const registration = buildRegistrationRequest(walletState.account, metadataUri);
+
+    setMessage(identityMessage, "Simulating the official ERC-8004 registration…", "busy");
+    const { request } = await publicClient.simulateContract({
+      ...registration,
+      address: registration.address as `0x${string}`,
+      abi: registration.abi as Abi,
+    });
+
+    setMessage(
+      identityMessage,
+      "Review and confirm the Identity Registry interaction in MetaMask.",
+      "busy",
+    );
+    const transactionHash = await walletClient.writeContract(request);
+
+    setMessage(identityMessage, "Registration submitted. Waiting for Arc confirmation…", "busy");
+    const receipt = await publicClient.waitForTransactionReceipt({
+      hash: transactionHash,
+      confirmations: 1,
+      timeout: 120_000,
+    });
+    if (receipt.status !== "success") {
+      throw new Error("ERC-8004 registration transaction failed.");
+    }
+
+    const agentId = parseRegisteredAgentId(receipt, walletState.account);
+    const [owner, tokenUri] = await Promise.all([
+      publicClient.readContract({
+        address: IDENTITY_REGISTRY,
+        abi: identityRegistryAbi,
+        functionName: "ownerOf",
+        args: [agentId],
+      }),
+      publicClient.readContract({
+        address: IDENTITY_REGISTRY,
+        abi: identityRegistryAbi,
+        functionName: "tokenURI",
+        args: [agentId],
+      }),
+    ]);
+    if (String(owner).toLowerCase() !== walletState.account.toLowerCase()) {
+      throw new Error("The minted agent identity owner does not match the connected wallet.");
+    }
+    if (String(tokenUri) !== metadataUri) {
+      throw new Error("The registered agent metadata URI does not match the reviewed URI.");
+    }
+
+    currentIdentityEvidence = buildIdentityEvidence({
+      account: walletState.account,
+      agentId,
+      metadataUri,
+      transactionHash,
+    });
+    byId("identity-agent-id").textContent = agentId.toString();
+    byId<HTMLAnchorElement>("identity-explorer-link").href =
+      `${ARC_EXPLORER}/tx/${transactionHash}`;
+    byId("identity-record").textContent = JSON.stringify(currentIdentityEvidence, null, 2);
+    identityEvidence.classList.remove("hidden");
+    setMessage(
+      identityMessage,
+      `Agent identity #${agentId.toString()} confirmed on Arc Testnet.`,
+      "good",
+    );
+  } catch (error) {
+    const classified = classifyIdentityError(error);
+    setMessage(identityMessage, classified.message, "bad");
+  } finally {
+    identityGuard.end();
+    renderIdentityReadiness();
+  }
+}
+
 connectButton.addEventListener("click", connectWallet);
 executeButton.addEventListener("click", executePayment);
+registerIdentityButton.addEventListener("click", registerAgentIdentity);
 for (const input of [recipientInput, amountInput, invoiceInput]) {
   input.addEventListener("input", renderDecision);
 }
@@ -440,6 +618,12 @@ byId("copy-audit").addEventListener("click", async () => {
   if (!currentAuditRecord) return;
   await navigator.clipboard.writeText(JSON.stringify(currentAuditRecord, null, 2));
   byId("copy-audit").textContent = "Copied";
+});
+
+byId("copy-identity").addEventListener("click", async () => {
+  if (!currentIdentityEvidence) return;
+  await navigator.clipboard.writeText(JSON.stringify(currentIdentityEvidence, null, 2));
+  byId("copy-identity").textContent = "Copied";
 });
 
 window.ethereum?.on?.("accountsChanged", () => {
