@@ -8,3 +8,7 @@ export const USDC_ADDRESS = "0x3600000000000000000000000000000000000000";
 export const IDENTITY_REGISTRY = "0x8004A818BFB912233c491871b3d84c89A494BD9e";
 export const AGENT_METADATA_URI =
   "https://raw.githubusercontent.com/kenvin-maker/arc-testnet-memo/main/agent-metadata.json";
+export const CONFIRMED_AGENT_ID = "851421";
+export const CONFIRMED_IDENTITY_TX =
+  "0xe8b29a7fe6150281e0917caea39c9cfc6d943d5904580a3cd74332209e93e490";
+export const CONFIRMED_IDENTITY_AT = "2026-07-19T19:07:12.000Z";

@@ -27,6 +27,9 @@ import {
   ARC_EXPLORER,
   ARC_RPC,
   AUXILIARY_WALLET,
+  CONFIRMED_AGENT_ID,
+  CONFIRMED_IDENTITY_AT,
+  CONFIRMED_IDENTITY_TX,
   EXPECTED_ACCOUNT,
   IDENTITY_REGISTRY,
   USDC_ADDRESS,
@@ -84,7 +87,13 @@ const publicClient = createPublicClient({ chain: arcViemChain, transport: http(A
 let walletState: WalletState | null = null;
 let currentDecision: PolicyResult | null = null;
 let currentAuditRecord: Record<string, unknown> | null = null;
-let currentIdentityEvidence: Record<string, unknown> | null = null;
+let currentIdentityEvidence: Record<string, unknown> | null = buildIdentityEvidence({
+  account: EXPECTED_ACCOUNT,
+  agentId: BigInt(CONFIRMED_AGENT_ID),
+  metadataUri: AGENT_METADATA_URI,
+  transactionHash: CONFIRMED_IDENTITY_TX,
+  confirmedAt: CONFIRMED_IDENTITY_AT,
+});
 
 const app = document.querySelector<HTMLDivElement>("#app");
 if (!app) throw new Error("Application root was not found.");
@@ -307,6 +316,22 @@ function renderIdentityReadiness() {
       "good",
     );
   }
+}
+
+function renderIdentityEvidence() {
+  if (!currentIdentityEvidence) return;
+  const agentId = String(currentIdentityEvidence.agentId);
+  const explorerUrl = String(currentIdentityEvidence.explorerUrl);
+  byId("identity-agent-id").textContent = agentId;
+  byId<HTMLAnchorElement>("identity-explorer-link").href = explorerUrl;
+  byId("identity-record").textContent = JSON.stringify(currentIdentityEvidence, null, 2);
+  identityEvidence.classList.remove("hidden");
+  registerIdentityButton.disabled = true;
+  setMessage(
+    identityMessage,
+    `Agent identity #${agentId} is confirmed on Arc Testnet. Registration is locked to prevent duplicates.`,
+    "good",
+  );
 }
 
 function renderDecision() {
@@ -588,22 +613,14 @@ async function registerAgentIdentity() {
       metadataUri,
       transactionHash,
     });
-    byId("identity-agent-id").textContent = agentId.toString();
-    byId<HTMLAnchorElement>("identity-explorer-link").href =
-      `${ARC_EXPLORER}/tx/${transactionHash}`;
-    byId("identity-record").textContent = JSON.stringify(currentIdentityEvidence, null, 2);
-    identityEvidence.classList.remove("hidden");
-    setMessage(
-      identityMessage,
-      `Agent identity #${agentId.toString()} confirmed on Arc Testnet.`,
-      "good",
-    );
+    renderIdentityEvidence();
   } catch (error) {
     const classified = classifyIdentityError(error);
     setMessage(identityMessage, classified.message, "bad");
   } finally {
     identityGuard.end();
-    renderIdentityReadiness();
+    registerIdentityButton.disabled =
+      !walletState || walletState.nativeGasUSDC <= 0 || Boolean(currentIdentityEvidence);
   }
 }
 
@@ -625,6 +642,8 @@ byId("copy-identity").addEventListener("click", async () => {
   await navigator.clipboard.writeText(JSON.stringify(currentIdentityEvidence, null, 2));
   byId("copy-identity").textContent = "Copied";
 });
+
+renderIdentityEvidence();
 
 window.ethereum?.on?.("accountsChanged", () => {
   walletState = null;

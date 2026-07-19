@@ -90,6 +90,31 @@ is not embedded in this App Kit Send transaction through Arc's Memo contract.
 The repository's earlier Memo contract transaction remains separate evidence
 of the onchain memo workflow.
 
+## Verified ERC-8004 Agent Identity
+
+On 2026-07-20, AgentTreasury Lite registered an onchain agent identity through
+Arc Testnet's official ERC-8004 Identity Registry.
+
+- Standard: `ERC-8004`
+- Agent ID: `851421`
+- Owner:
+  `0x8b615E587C9636db67Dd93f4982116ce053EabDD`
+- Identity Registry:
+  `0x8004A818BFB912233c491871b3d84c89A494BD9e`
+- Metadata:
+  https://raw.githubusercontent.com/kenvin-maker/arc-testnet-memo/main/agent-metadata.json
+- Transaction:
+  https://testnet.arcscan.app/tx/0xe8b29a7fe6150281e0917caea39c9cfc6d943d5904580a3cd74332209e93e490
+
+RPC verification confirms that the registry minted agent token `851421` to the
+project wallet and that `tokenURI(851421)` returns the public metadata URL
+above. The browser demo displays this confirmed identity and disables additional
+registration to prevent accidental duplicate identities.
+
+This milestone covers ERC-8004 identity only. The project does not claim a
+Reputation Registry score, Validation Registry result, or guaranteed airdrop
+eligibility.
+
 ## AgentTreasury Lite Runnable MVP
 
 The original CLI remains available as a dry-run treasury policy agent for the

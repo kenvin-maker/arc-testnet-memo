@@ -5,6 +5,8 @@ import { encodeEventTopics } from "viem";
 import {
   AGENT_METADATA_URI,
   ARC_CHAIN_ID,
+  CONFIRMED_AGENT_ID,
+  CONFIRMED_IDENTITY_TX,
   EXPECTED_ACCOUNT,
   IDENTITY_REGISTRY,
 } from "../src/browser/arcConfig.js";
@@ -23,6 +25,11 @@ test("Arc config locks the official identity registry and expected wallet", () =
   assert.equal(ARC_CHAIN_ID, 5_042_002);
   assert.equal(IDENTITY_REGISTRY, "0x8004A818BFB912233c491871b3d84c89A494BD9e");
   assert.equal(EXPECTED_ACCOUNT, "0x8b615e587c9636db67dd93f4982116ce053eabdd");
+  assert.equal(CONFIRMED_AGENT_ID, "851421");
+  assert.equal(
+    CONFIRMED_IDENTITY_TX,
+    "0xe8b29a7fe6150281e0917caea39c9cfc6d943d5904580a3cd74332209e93e490",
+  );
 });
 
 test("public agent metadata is valid and identifies AgentTreasury Lite", async () => {
