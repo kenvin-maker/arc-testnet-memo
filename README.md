@@ -115,6 +115,15 @@ This milestone covers ERC-8004 identity only. The project does not claim a
 Reputation Registry score, Validation Registry result, or guaranteed airdrop
 eligibility.
 
+## Encode Checkpoint 2 Presentation
+
+The mid-submission presentation summarizes the working policy-gated browser
+MVP, Arc and Circle integrations, verified transactions, ERC-8004 identity,
+tests, and next steps.
+
+- [View the PDF](docs/presentation/AgentTreasury-Lite-Checkpoint-2.pdf)
+- [Download the PowerPoint](docs/presentation/AgentTreasury-Lite-Checkpoint-2.pptx)
+
 ## AgentTreasury Lite Runnable MVP
 
 The original CLI remains available as a dry-run treasury policy agent for the
