@@ -27,6 +27,13 @@ payment request -> policy decision -> human authorization -> App Kit Send -> Arc
 The browser application never requests, reads, stores, or exports a private key.
 It cannot execute a rejected request, and it prevents duplicate sends while a
 transaction is in flight.
+## Gateway / Nanopayments Roadmap
+
+AgentTreasury Lite currently demonstrates the policy and evidence layer for agent payments on Arc Testnet: policy-gated payment decisions, USDC settlement evidence, transaction memos, batch transfers, ERC-8004 identity, and ArcScan reconciliation.
+
+The next integration is [Circle Gateway / Nanopayments](docs/gateway-nanopayments-plan.md). The target flow is: an agent receives HTTP 402 payment instructions, the treasury policy approves or rejects the request, an official EIP-3009 authorization is prepared only after approval, and Gateway batches settlement on Arc.
+
+This is a roadmap, not a claim that Gateway or Nanopayments is already live in this prototype.
 
 ### Requirements
 
