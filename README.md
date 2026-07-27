@@ -35,6 +35,23 @@ The next integration is [Circle Gateway / Nanopayments](docs/gateway-nanopayment
 
 This is a roadmap, not a claim that Gateway or Nanopayments is already live in this prototype.
 
+### Mock HTTP 402 authorization preview
+
+The browser demo also includes a safe, runnable mock of the first Nanopayments
+step. It generates local HTTP `402` payment instructions from the payment form,
+runs the existing treasury policy, and displays a copyable audit record.
+
+- An approved request receives a deterministic **NON-SIGNING** EIP-3009 preview
+  reference.
+- A rejected request receives no authorization preview.
+- Every mock record labels settlement as **PLANNED**.
+- The preview never connects a wallet, asks for a signature, calls Circle
+  Gateway, or broadcasts a transaction.
+
+This is implementation evidence for the control layer described in the
+[Gateway / Nanopayments roadmap](docs/gateway-nanopayments-plan.md), not a
+claim of live Gateway, x402, or EIP-3009 support.
+
 ### Requirements
 
 - Node.js 22 or newer

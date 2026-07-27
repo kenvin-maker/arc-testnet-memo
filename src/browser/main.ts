@@ -14,6 +14,10 @@ import {
 } from "viem";
 import { BROWSER_DEMO_POLICY, evaluatePolicy } from "../policy.js";
 import {
+  buildMock402AuditRecord,
+  createMockPaymentInstructions,
+} from "../nanopaymentsMock.js";
+import {
   buildAuditRecord,
   buildSendParams,
   classifyPaymentError,
@@ -87,6 +91,7 @@ const publicClient = createPublicClient({ chain: arcViemChain, transport: http(A
 let walletState: WalletState | null = null;
 let currentDecision: PolicyResult | null = null;
 let currentAuditRecord: Record<string, unknown> | null = null;
+let currentMock402Record: Record<string, unknown> | null = null;
 let currentIdentityEvidence: Record<string, unknown> | null = buildIdentityEvidence({
   account: EXPECTED_ACCOUNT,
   agentId: BigInt(CONFIRMED_AGENT_ID),
@@ -187,6 +192,19 @@ app.innerHTML = `
       </section>
     </div>
 
+    <section class="evidence-card mock-card" aria-labelledby="mock-402-title">
+      <div>
+        <p class="section-kicker">03B / MOCK 402</p>
+        <h2 id="mock-402-title">Nanopayment authorization preview</h2>
+      </div>
+      <button id="generate-mock-402" class="button outline" type="button">Generate safe preview</button>
+      <p id="mock-402-message" class="message neutral">
+        Simulates HTTP 402 instructions and a policy decision. It never connects a wallet, requests a signature, or calls Circle Gateway.
+      </p>
+      <pre id="mock-402-record">No mock payment instructions generated yet.</pre>
+      <button id="copy-mock-402" class="text-button" type="button" disabled>Copy mock audit JSON</button>
+    </section>
+
     <section class="status-card execution-card" aria-labelledby="execution-title">
       <div>
         <p class="section-kicker">04 · EXECUTION</p>
@@ -271,6 +289,10 @@ const invoiceInput = byId<HTMLInputElement>("invoice");
 const walletMessage = byId<HTMLParagraphElement>("wallet-message");
 const executionMessage = byId<HTMLParagraphElement>("execution-message");
 const evidenceCard = byId<HTMLElement>("evidence-card");
+const generateMock402Button = byId<HTMLButtonElement>("generate-mock-402");
+const mock402Message = byId<HTMLParagraphElement>("mock-402-message");
+const mock402Record = byId<HTMLPreElement>("mock-402-record");
+const copyMock402Button = byId<HTMLButtonElement>("copy-mock-402");
 const registerIdentityButton = byId<HTMLButtonElement>("register-identity");
 const identityMessage = byId<HTMLParagraphElement>("identity-message");
 const identityEvidence = byId<HTMLElement>("identity-evidence");
@@ -387,6 +409,48 @@ function renderDecision() {
     summary.textContent = error instanceof Error ? error.message : "The request is invalid.";
     setExecutionEnabled(false);
     renderIdentityReadiness();
+  }
+}
+
+async function generateMock402Preview() {
+  generateMock402Button.disabled = true;
+  copyMock402Button.disabled = true;
+
+  try {
+    const walletBalanceUSDC = walletState?.spendableUSDC ?? 1;
+    const instructions = createMockPaymentInstructions({
+      recipient: recipientInput.value.trim(),
+      amountUSDC: Number(amountInput.value),
+      invoiceId: invoiceInput.value,
+      resource: "AgentTreasury Lite settlement quote",
+    });
+    currentMock402Record = await buildMock402AuditRecord({
+      instructions,
+      policy: BROWSER_DEMO_POLICY,
+      walletBalanceUSDC,
+    });
+
+    mock402Record.textContent = JSON.stringify(currentMock402Record, null, 2);
+    copyMock402Button.disabled = false;
+    const decision = String(currentMock402Record.policyDecision &&
+      (currentMock402Record.policyDecision as { decision?: string }).decision);
+    setMessage(
+      mock402Message,
+      decision === "APPROVED"
+        ? `Mock HTTP 402 request approved using ${walletState ? "the connected wallet balance" : "a 1.00 USDC simulation balance"}. The authorization reference is non-signing and settlement remains planned.`
+        : "Mock HTTP 402 request rejected by policy. No authorization preview was generated.",
+      decision === "APPROVED" ? "good" : "bad",
+    );
+  } catch (error) {
+    currentMock402Record = null;
+    mock402Record.textContent = "No mock audit record was generated.";
+    setMessage(
+      mock402Message,
+      error instanceof Error ? error.message : "The mock request is invalid.",
+      "bad",
+    );
+  } finally {
+    generateMock402Button.disabled = false;
   }
 }
 
@@ -626,6 +690,7 @@ async function registerAgentIdentity() {
 
 connectButton.addEventListener("click", connectWallet);
 executeButton.addEventListener("click", executePayment);
+generateMock402Button.addEventListener("click", generateMock402Preview);
 registerIdentityButton.addEventListener("click", registerAgentIdentity);
 for (const input of [recipientInput, amountInput, invoiceInput]) {
   input.addEventListener("input", renderDecision);
@@ -635,6 +700,12 @@ byId("copy-audit").addEventListener("click", async () => {
   if (!currentAuditRecord) return;
   await navigator.clipboard.writeText(JSON.stringify(currentAuditRecord, null, 2));
   byId("copy-audit").textContent = "Copied";
+});
+
+copyMock402Button.addEventListener("click", async () => {
+  if (!currentMock402Record) return;
+  await navigator.clipboard.writeText(JSON.stringify(currentMock402Record, null, 2));
+  copyMock402Button.textContent = "Copied";
 });
 
 byId("copy-identity").addEventListener("click", async () => {
