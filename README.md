@@ -2,6 +2,11 @@
 
 Simple Arc Network Testnet smart contract deployment and interaction log.
 
+**Live demo:** https://agent-treasury-lite.vercel.app
+
+The public demo is deployed on Vercel for reviewer access. It uses testnet-only
+flows and keeps wallet signatures as an explicit user confirmation step.
+
 ## AgentTreasury Lite App Kit Demo
 
 AgentTreasury Lite now includes a browser-based policy agent that evaluates an

@@ -5,3 +5,5 @@ dist/
 !.env.example
 .vite-preview.*.log
 .superpowers/
+.vercel
+.env*
