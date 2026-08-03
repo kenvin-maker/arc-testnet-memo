@@ -7,3 +7,6 @@ dist/
 .superpowers/
 .vercel
 .env*
+.tmp-final-deck/
+docs/presentation/AgentTreasury-Lite-Final-Submission/
+docs/presentation/AgentTreasury-Lite-Final-Submission.pptx.inspect.ndjson
