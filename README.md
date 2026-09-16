@@ -4,9 +4,9 @@ Policy-gated USDC settlement and evidence flow for Arc.
 
 **Live demo:** https://agent-treasury-lite.vercel.app
 
-The public demo is deployed on Vercel for reviewer access and remains Testnet-only
-until a separately reviewed Mainnet deployment is published. Wallet signatures are
-always an explicit user confirmation step.
+The production demo is deployed on Vercel with an Arc Mainnet build. The codebase
+also preserves the historical Testnet configuration and evidence. Wallet signatures
+are always an explicit user confirmation step.
 
 ## Final Submission Assets
 
@@ -16,8 +16,8 @@ always an explicit user confirmation step.
 - [Live demo](https://agent-treasury-lite.vercel.app)
 - [Video demo](https://www.youtube.com/watch?v=3jFuRj20a8g)
 
-These assets distinguish verified Arc Testnet evidence from the planned
-Gateway / Nanopayments integration roadmap and any future Mainnet deployment.
+These assets distinguish verified Testnet history, the verified Mainnet payment
+below, and the planned Gateway / Nanopayments integration roadmap.
 
 ## AgentTreasury Lite App Kit Demo
 
@@ -26,7 +26,7 @@ USDC payment before Circle App Kit can request a MetaMask signature. The same
 codebase supports an explicit Testnet or Mainnet build; the default is Testnet
 to preserve the public demo and historical evidence.
 
-The demo implements this flow:
+The demo implements this flow on the selected Arc network:
 
 ```text
 payment request -> policy decision -> human authorization -> App Kit Send -> ArcScan evidence
@@ -66,11 +66,9 @@ verified.
 
 ### Arc Microgrants readiness
 
-Arc Microgrants requires a project that is already deployed and working on Arc
-Mainnet at submission time. The program is a possible 500 USDC grant, not an
-application fee or guaranteed reward. This repository is being prepared for that
-requirement, but this README does not claim a completed Mainnet deployment or
-grant eligibility.
+The production deployment is now working on Arc Mainnet and has a verifiable
+`0.01 USDC` payment recorded below. Arc Microgrants is a possible 500 USDC grant,
+not an application fee or guaranteed reward.
 ## Gateway / Nanopayments Roadmap
 
 AgentTreasury Lite currently demonstrates the policy and evidence layer for agent payments on Arc Testnet: policy-gated payment decisions, USDC settlement evidence, transaction memos, batch transfers, ERC-8004 identity, and ArcScan reconciliation.
