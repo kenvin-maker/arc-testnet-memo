@@ -160,6 +160,25 @@ is not embedded in this App Kit Send transaction through Arc's Memo contract.
 The repository's earlier Memo contract transaction remains separate evidence
 of the onchain memo workflow.
 
+### Verified Arc Mainnet payment
+
+On 2026-09-17, the production Mainnet build connected the expected project
+wallet to Arc Mainnet and settled a real `0.01 USDC` payment to the allowlisted
+auxiliary wallet.
+
+- Network: Arc Mainnet, chain ID `5042`
+- Sender:
+  `0x8b615E587C9636db67Dd93f4982116ce053EabDD`
+- Recipient:
+  `0x9240e82aE80D70875BA854F480ba412b410cd54a`
+- Amount: `0.01 USDC`
+- Transaction:
+  https://explorer.arc.io/tx/0x4ddc73ae2564a0c1c3d687bb2509a5b36783c790a424d2e973705a63ed0fcacf
+
+RPC verification confirms a successful Arc Mainnet receipt with a native USDC
+transfer event from the project wallet to the auxiliary wallet. No approval or
+Permit transaction was used.
+
 ## Verified ERC-8004 Agent Identity
 
 On 2026-07-20, AgentTreasury Lite registered an onchain agent identity through
