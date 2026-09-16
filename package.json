@@ -2,7 +2,7 @@
   "name": "agent-treasury-lite",
   "version": "0.1.0",
   "private": true,
-  "description": "Policy-gated Arc Testnet USDC payment demo using Circle App Kit",
+  "description": "Policy-gated Arc USDC payment demo using Circle App Kit",
   "type": "module",
   "scripts": {
     "start": "node src/agentTreasuryLite.js",
@@ -15,8 +15,8 @@
     "node": ">=22"
   },
   "dependencies": {
-    "@circle-fin/adapter-viem-v2": "^1.14.0",
-    "@circle-fin/app-kit": "^1.10.0",
+    "@circle-fin/adapter-viem-v2": "^1.18.0",
+    "@circle-fin/app-kit": "^1.15.2",
     "buffer": "^6.0.3",
     "viem": "^2.55.2"
   },

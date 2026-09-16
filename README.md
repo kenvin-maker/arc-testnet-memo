@@ -1,11 +1,12 @@
-# Arc Testnet Memo
+# AgentTreasury Lite — Arc Testnet + Mainnet preparation
 
-Simple Arc Network Testnet smart contract deployment and interaction log.
+Policy-gated USDC settlement and evidence flow for Arc.
 
 **Live demo:** https://agent-treasury-lite.vercel.app
 
-The public demo is deployed on Vercel for reviewer access. It uses testnet-only
-flows and keeps wallet signatures as an explicit user confirmation step.
+The public demo is deployed on Vercel for reviewer access and remains Testnet-only
+until a separately reviewed Mainnet deployment is published. Wallet signatures are
+always an explicit user confirmation step.
 
 ## Final Submission Assets
 
@@ -16,12 +17,14 @@ flows and keeps wallet signatures as an explicit user confirmation step.
 - [Video demo](https://www.youtube.com/watch?v=3jFuRj20a8g)
 
 These assets distinguish verified Arc Testnet evidence from the planned
-Gateway / Nanopayments integration roadmap.
+Gateway / Nanopayments integration roadmap and any future Mainnet deployment.
 
 ## AgentTreasury Lite App Kit Demo
 
-AgentTreasury Lite now includes a browser-based policy agent that evaluates an
-Arc Testnet USDC payment before Circle App Kit can request a MetaMask signature.
+AgentTreasury Lite includes a browser-based policy agent that evaluates an Arc
+USDC payment before Circle App Kit can request a MetaMask signature. The same
+codebase supports an explicit Testnet or Mainnet build; the default is Testnet
+to preserve the public demo and historical evidence.
 
 The demo implements this flow:
 
@@ -43,6 +46,31 @@ payment request -> policy decision -> human authorization -> App Kit Send -> Arc
 The browser application never requests, reads, stores, or exports a private key.
 It cannot execute a rejected request, and it prevents duplicate sends while a
 transaction is in flight.
+
+### Network selection
+
+Set `VITE_ARC_NETWORK` to select the build target:
+
+```bash
+# Safe default; preserves the existing Testnet demo
+VITE_ARC_NETWORK=testnet npm run dev
+
+# Mainnet build; use only after reviewing the generated configuration and deployment
+VITE_ARC_NETWORK=mainnet npm run dev
+```
+
+The Mainnet configuration uses the official Circle App Kit Arc definition. The
+existing ERC-8004 identity and contract evidence remains explicitly Testnet-only;
+Mainnet identity registration is disabled until an official Mainnet registry is
+verified.
+
+### Arc Microgrants readiness
+
+Arc Microgrants requires a project that is already deployed and working on Arc
+Mainnet at submission time. The program is a possible 500 USDC grant, not an
+application fee or guaranteed reward. This repository is being prepared for that
+requirement, but this README does not claim a completed Mainnet deployment or
+grant eligibility.
 ## Gateway / Nanopayments Roadmap
 
 AgentTreasury Lite currently demonstrates the policy and evidence layer for agent payments on Arc Testnet: policy-gated payment decisions, USDC settlement evidence, transaction memos, batch transfers, ERC-8004 identity, and ArcScan reconciliation.
@@ -72,8 +100,10 @@ claim of live Gateway, x402, or EIP-3009 support.
 
 - Node.js 22 or newer
 - Google Chrome with MetaMask
-- Arc Testnet configured with chain ID `5042002`
-- testnet USDC only
+- Arc Testnet configured with chain ID `5042002` for the default build
+- Arc Mainnet configured through the official App Kit chain definition for a
+  separately reviewed Mainnet build
+- USDC for the selected network
 
 ### Install and run
 
@@ -84,12 +114,12 @@ npm run dev
 
 Open `http://127.0.0.1:4173`, then:
 
-1. Connect MetaMask with the expected Arc Testnet wallet.
+1. Connect MetaMask with the expected wallet on the selected Arc network.
 2. Review the prefilled recipient, amount, and invoice ID.
 3. Confirm that the agent decision is `APPROVED`.
 4. Click **Execute with MetaMask**.
 5. Review and sign the transaction in MetaMask.
-6. Use the returned ArcScan link and audit JSON to verify settlement.
+6. Use the returned explorer link and audit JSON to verify settlement.
 
 Build the production bundle with:
 

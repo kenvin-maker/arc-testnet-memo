@@ -1,6 +1,6 @@
 import "./polyfills";
 import { AppKit } from "@circle-fin/app-kit";
-import { ArcTestnet } from "@circle-fin/app-kit/chains";
+import { Arc, ArcTestnet } from "@circle-fin/app-kit/chains";
 import { createViemAdapterFromProvider } from "@circle-fin/adapter-viem-v2";
 import {
   createPublicClient,
@@ -26,17 +26,13 @@ import {
 } from "./paymentFlow.js";
 import {
   AGENT_METADATA_URI,
-  ARC_CHAIN_HEX,
-  ARC_CHAIN_ID,
-  ARC_EXPLORER,
-  ARC_RPC,
+  ACTIVE_ARC_NETWORK,
   AUXILIARY_WALLET,
   CONFIRMED_AGENT_ID,
   CONFIRMED_IDENTITY_AT,
   CONFIRMED_IDENTITY_TX,
   EXPECTED_ACCOUNT,
   IDENTITY_REGISTRY,
-  USDC_ADDRESS,
 } from "./arcConfig.js";
 import {
   buildIdentityEvidence,
@@ -49,15 +45,16 @@ import {
 } from "./agentIdentity.js";
 import "./styles.css";
 
+const appKitChain = ACTIVE_ARC_NETWORK.key === "mainnet" ? Arc : ArcTestnet;
 const arcViemChain = defineChain({
-  id: ARC_CHAIN_ID,
-  name: "Arc Testnet",
+  id: ACTIVE_ARC_NETWORK.chainId,
+  name: ACTIVE_ARC_NETWORK.name,
   nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
-  rpcUrls: { default: { http: [ARC_RPC] } },
+  rpcUrls: { default: { http: [ACTIVE_ARC_NETWORK.rpc] } },
   blockExplorers: {
-    default: { name: "ArcScan", url: ARC_EXPLORER },
+    default: { name: "Arc Explorer", url: ACTIVE_ARC_NETWORK.explorer },
   },
-  testnet: true,
+  testnet: ACTIVE_ARC_NETWORK.key === "testnet",
 });
 
 const erc20BalanceAbi = [
@@ -87,7 +84,10 @@ type WalletState = {
 const kit = new AppKit();
 const guard = createExecutionGuard();
 const identityGuard = createIdentityExecutionGuard();
-const publicClient = createPublicClient({ chain: arcViemChain, transport: http(ARC_RPC) });
+const publicClient = createPublicClient({
+  chain: arcViemChain,
+  transport: http(ACTIVE_ARC_NETWORK.rpc),
+});
 let walletState: WalletState | null = null;
 let currentDecision: PolicyResult | null = null;
 let currentAuditRecord: Record<string, unknown> | null = null;
@@ -109,7 +109,7 @@ app.innerHTML = `
       <div class="brand-lockup">
         <div class="mark" aria-hidden="true">A</div>
         <div>
-          <p class="eyebrow">ARC TESTNET · CIRCLE APP KIT</p>
+        <p class="eyebrow">${ACTIVE_ARC_NETWORK.name.toUpperCase()} · CIRCLE APP KIT</p>
           <h1>AgentTreasury <span>Lite</span></h1>
         </div>
       </div>
@@ -130,7 +130,7 @@ app.innerHTML = `
       <button id="connect-wallet" class="button primary" type="button">Connect MetaMask</button>
       <div class="status-grid">
         <div><span>Status</span><strong id="wallet-status">Disconnected</strong></div>
-        <div><span>Network</span><strong id="network-status">Arc Testnet required</strong></div>
+        <div><span>Network</span><strong id="network-status">${ACTIVE_ARC_NETWORK.name} required</strong></div>
         <div><span>Account</span><strong id="account-status">—</strong></div>
         <div><span>Spendable USDC</span><strong id="usdc-balance">—</strong></div>
         <div><span>Native gas balance</span><strong id="gas-balance">—</strong></div>
@@ -243,7 +243,7 @@ app.innerHTML = `
       </button>
       <div class="identity-meta">
         <div><span>Standard</span><strong>ERC-8004</strong></div>
-        <div><span>Network</span><strong>Arc Testnet</strong></div>
+        <div><span>Network</span><strong>Arc Testnet historical evidence</strong></div>
         <div><span>Identity Registry</span><strong>${IDENTITY_REGISTRY}</strong></div>
       </div>
       <p class="identity-uri">
@@ -311,6 +311,16 @@ function setExecutionEnabled(enabled: boolean) {
 }
 
 function renderIdentityReadiness() {
+  if (!ACTIVE_ARC_NETWORK.identity.enabled) {
+    registerIdentityButton.disabled = true;
+    setMessage(
+      identityMessage,
+      "ERC-8004 registration is disabled on Arc Mainnet until an official Mainnet registry is verified.",
+      "neutral",
+    );
+    return;
+  }
+
   const ready =
     Boolean(walletState) &&
     (walletState?.nativeGasUSDC ?? 0) > 0 &&
@@ -351,7 +361,9 @@ function renderIdentityEvidence() {
   registerIdentityButton.disabled = true;
   setMessage(
     identityMessage,
-    `Agent identity #${agentId} is confirmed on Arc Testnet. Registration is locked to prevent duplicates.`,
+    ACTIVE_ARC_NETWORK.key === "testnet"
+      ? `Agent identity #${agentId} is confirmed on Arc Testnet. Registration is locked to prevent duplicates.`
+      : `Historical Arc Testnet identity #${agentId} is shown. Mainnet registration remains disabled.`,
     "good",
   );
 }
@@ -456,12 +468,12 @@ async function generateMock402Preview() {
 
 async function ensureArcNetwork(provider: EIP1193Provider) {
   const chainId = await provider.request({ method: "eth_chainId" });
-  if (String(chainId).toLowerCase() === ARC_CHAIN_HEX.toLowerCase()) return;
+  if (String(chainId).toLowerCase() === ACTIVE_ARC_NETWORK.chainHex.toLowerCase()) return;
 
   try {
     await provider.request({
       method: "wallet_switchEthereumChain",
-      params: [{ chainId: ARC_CHAIN_HEX }],
+      params: [{ chainId: ACTIVE_ARC_NETWORK.chainHex }],
     });
   } catch (error) {
     const code = error && typeof error === "object" ? (error as { code?: number }).code : undefined;
@@ -471,11 +483,11 @@ async function ensureArcNetwork(provider: EIP1193Provider) {
       method: "wallet_addEthereumChain",
       params: [
         {
-          chainId: ARC_CHAIN_HEX,
-          chainName: "Arc Testnet",
+          chainId: ACTIVE_ARC_NETWORK.chainHex,
+          chainName: ACTIVE_ARC_NETWORK.name,
           nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
-          rpcUrls: [ARC_RPC],
-          blockExplorerUrls: ["https://testnet.arcscan.app"],
+          rpcUrls: [ACTIVE_ARC_NETWORK.rpc],
+          blockExplorerUrls: [ACTIVE_ARC_NETWORK.explorer],
         },
       ],
     });
@@ -486,7 +498,7 @@ async function readWalletBalances(account: `0x${string}`) {
   const [nativeBalance, tokenBalance] = await Promise.all([
     publicClient.getBalance({ address: account }),
     publicClient.readContract({
-      address: USDC_ADDRESS,
+      address: ACTIVE_ARC_NETWORK.usdcAddress,
       abi: erc20BalanceAbi,
       functionName: "balanceOf",
       args: [account],
@@ -507,7 +519,11 @@ async function connectWallet() {
   }
 
   connectButton.disabled = true;
-  setMessage(walletMessage, "Connecting to MetaMask and checking Arc Testnet…", "busy");
+  setMessage(
+    walletMessage,
+    `Connecting to MetaMask and checking ${ACTIVE_ARC_NETWORK.name}…`,
+    "busy",
+  );
 
   try {
     const accounts = (await provider.request({ method: "eth_requestAccounts" })) as string[];
@@ -521,8 +537,8 @@ async function connectWallet() {
 
     await ensureArcNetwork(provider);
     const chainId = await provider.request({ method: "eth_chainId" });
-    if (String(chainId).toLowerCase() !== ARC_CHAIN_HEX.toLowerCase()) {
-      throw new Error("MetaMask is not connected to Arc Testnet.");
+    if (String(chainId).toLowerCase() !== ACTIVE_ARC_NETWORK.chainHex.toLowerCase()) {
+      throw new Error(`MetaMask is not connected to ${ACTIVE_ARC_NETWORK.name}.`);
     }
 
     const balances = await readWalletBalances(account);
@@ -530,13 +546,13 @@ async function connectWallet() {
       provider,
       capabilities: {
         addressContext: "user-controlled",
-        supportedChains: [ArcTestnet],
+        supportedChains: [appKitChain],
       },
     });
 
     walletState = { account, adapter, ...balances };
     byId("wallet-status").textContent = "Connected";
-    byId("network-status").textContent = "Arc Testnet · 5042002";
+    byId("network-status").textContent = `${ACTIVE_ARC_NETWORK.name} · ${ACTIVE_ARC_NETWORK.chainId}`;
     byId("account-status").textContent = shortenAddress(account);
     byId("usdc-balance").textContent = `${balances.spendableUSDC.toFixed(6)} USDC`;
     byId("gas-balance").textContent = `${balances.nativeGasUSDC.toFixed(6)} USDC`;
@@ -544,7 +560,7 @@ async function connectWallet() {
     setMessage(
       walletMessage,
       balances.spendableUSDC >= 0.06
-        ? "Expected wallet verified. Live balances loaded from Arc Testnet."
+        ? `Expected wallet verified. Live balances loaded from ${ACTIVE_ARC_NETWORK.name}.`
         : "Wallet connected, but the policy requires at least 0.06 spendable USDC.",
       balances.spendableUSDC >= 0.06 ? "good" : "bad",
     );
@@ -577,6 +593,7 @@ async function executePayment() {
     const params = buildSendParams(
       walletState.adapter,
       currentDecision,
+      ACTIVE_ARC_NETWORK,
     ) as Parameters<AppKit["send"]>[0];
     setMessage(executionMessage, "Estimating the App Kit Send transaction…", "busy");
     const estimate = await kit.estimateSend(params);
@@ -593,12 +610,17 @@ async function executePayment() {
       account: walletState.account,
       policyResult: currentDecision,
       sendResult: result,
+      network: ACTIVE_ARC_NETWORK,
     });
 
     byId<HTMLAnchorElement>("explorer-link").href = normalized.explorerUrl;
     byId("audit-record").textContent = JSON.stringify(currentAuditRecord, null, 2);
     evidenceCard.classList.remove("hidden");
-    setMessage(executionMessage, "App Kit Send confirmed on Arc Testnet.", "good");
+    setMessage(
+      executionMessage,
+      `App Kit Send confirmed on ${ACTIVE_ARC_NETWORK.name}.`,
+      "good",
+    );
   } catch (error) {
     const classified = classifyPaymentError(error);
     setMessage(executionMessage, classified.message, "bad");
@@ -610,7 +632,7 @@ async function executePayment() {
 
 async function registerAgentIdentity() {
   const provider = window.ethereum;
-  if (!provider || !walletState || !identityGuard.begin()) return;
+  if (!ACTIVE_ARC_NETWORK.identity.enabled || !provider || !walletState || !identityGuard.begin()) return;
 
   currentIdentityEvidence = null;
   identityEvidence.classList.add("hidden");
@@ -726,6 +748,10 @@ window.ethereum?.on?.("accountsChanged", () => {
 window.ethereum?.on?.("chainChanged", () => {
   walletState = null;
   currentDecision = null;
-  setMessage(walletMessage, "Wallet network changed. Reconnect to verify Arc Testnet.", "neutral");
+  setMessage(
+    walletMessage,
+    `Wallet network changed. Reconnect to verify ${ACTIVE_ARC_NETWORK.name}.`,
+    "neutral",
+  );
   renderDecision();
 });

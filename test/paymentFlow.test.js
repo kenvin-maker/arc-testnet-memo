@@ -9,6 +9,7 @@ import {
   createExecutionGuard,
   normalizeSendResult,
 } from "../src/browser/paymentFlow.js";
+import { resolveArcNetwork } from "../src/browser/arcConfig.js";
 
 const policyResult = {
   decision: "APPROVED",
@@ -31,6 +32,35 @@ test("buildSendParams uses Arc Testnet, USDC, and the approved request", () => {
     amount: "0.01",
     token: "USDC",
   });
+});
+
+test("network configuration supports Arc Mainnet without changing the Testnet default", async () => {
+  const mainnet = resolveArcNetwork("mainnet");
+  assert.equal(mainnet.chainId, 5042);
+  assert.equal(mainnet.appKitChain, "Arc");
+  assert.equal(buildSendParams({}, policyResult, mainnet).from.chain, "Arc");
+  assert.equal(
+    normalizeSendResult({ state: "success", txHash: "0xmainnet" }, mainnet).explorerUrl,
+    "https://explorer.arc.io/tx/0xmainnet",
+  );
+
+  const record = await buildAuditRecord({
+    account: "0x8b615E587C9636db67Dd93f4982116ce053EabDD",
+    policyResult,
+    sendResult: { state: "success", txHash: "0xmainnet" },
+    network: mainnet,
+  });
+  assert.equal(record.network, "Arc Mainnet");
+  assert.equal(record.chainId, 5042);
+  assert.equal(record.explorerUrl, "https://explorer.arc.io/tx/0xmainnet");
+  assert.match(
+    classifyPaymentError(new Error("insufficient funds"), mainnet).message,
+    /Arc Mainnet/,
+  );
+});
+
+test("network configuration rejects unknown values", () => {
+  assert.throws(() => resolveArcNetwork("preview"), /Use "testnet" or "mainnet"/);
 });
 
 test("buildSendParams refuses rejected decisions", () => {

@@ -1,6 +1,6 @@
-export const ARC_EXPLORER_TX = "https://testnet.arcscan.app/tx/";
+import { ACTIVE_ARC_NETWORK } from "./arcConfig.js";
 
-export function buildSendParams(adapter, policyResult) {
+export function buildSendParams(adapter, policyResult, network = ACTIVE_ARC_NETWORK) {
   if (!adapter) {
     throw new TypeError("A connected App Kit adapter is required.");
   }
@@ -9,14 +9,14 @@ export function buildSendParams(adapter, policyResult) {
   }
 
   return {
-    from: { adapter, chain: "Arc_Testnet" },
+    from: { adapter, chain: network.appKitChain },
     to: policyResult.request.recipient,
     amount: String(policyResult.request.amountUSDC),
     token: "USDC",
   };
 }
 
-export function normalizeSendResult(result) {
+export function normalizeSendResult(result, network = ACTIVE_ARC_NETWORK) {
   if (!result || typeof result !== "object") {
     throw new Error("App Kit returned an empty transaction result.");
   }
@@ -29,7 +29,7 @@ export function normalizeSendResult(result) {
 
   return {
     txHash: result.txHash,
-    explorerUrl: result.explorerUrl || `${ARC_EXPLORER_TX}${result.txHash}`,
+    explorerUrl: result.explorerUrl || `${network.explorerTx}${result.txHash}`,
   };
 }
 
@@ -44,16 +44,21 @@ export async function createBrowserMemoId(invoiceId) {
   ).join("")}`;
 }
 
-export async function buildAuditRecord({ account, policyResult, sendResult }) {
+export async function buildAuditRecord({
+  account,
+  policyResult,
+  sendResult,
+  network = ACTIVE_ARC_NETWORK,
+}) {
   if (!account) {
     throw new TypeError("A sender account is required.");
   }
-  const normalized = normalizeSendResult(sendResult);
+  const normalized = normalizeSendResult(sendResult, network);
 
   return {
     project: "AgentTreasury Lite",
-    network: "Arc Testnet",
-    chainId: 5042002,
+    network: network.name,
+    chainId: network.chainId,
     invoiceId: policyResult.request.invoiceId,
     memoId: await createBrowserMemoId(policyResult.request.invoiceId),
     memoScope: "Offchain reconciliation identifier; not attached through Arc Memo.",
@@ -66,7 +71,7 @@ export async function buildAuditRecord({ account, policyResult, sendResult }) {
   };
 }
 
-export function classifyPaymentError(error) {
+export function classifyPaymentError(error, network = ACTIVE_ARC_NETWORK) {
   const code = error && typeof error === "object" ? error.code : undefined;
   const message = error instanceof Error ? error.message : String(error || "");
   const normalized = message.toLowerCase();
@@ -84,7 +89,7 @@ export function classifyPaymentError(error) {
   if (normalized.includes("insufficient funds") || normalized.includes("insufficient balance")) {
     return {
       kind: "insufficient-balance",
-      message: "The wallet does not have enough Arc Testnet USDC for this payment and gas.",
+      message: `The wallet does not have enough ${network.name} USDC for this payment and gas.`,
     };
   }
   if (normalized.includes("estimate") || normalized.includes("simulation")) {
